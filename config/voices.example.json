@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "voices": {
+    "narrator": {
+      "mode": "design",
+      "instruction": "A warm, clear Russian narrator",
+      "language": "Russian"
+    }
+  }
+}
