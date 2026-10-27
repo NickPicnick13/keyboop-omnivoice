@@ -3,7 +3,7 @@
   "voices": {
     "narrator": {
       "mode": "design",
-      "instruction": "A warm, clear Russian narrator",
+      "instruction": "female, moderate pitch, russian accent",
       "language": "Russian"
     }
   }

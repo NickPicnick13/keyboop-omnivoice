@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keyboop + OmniVoice · Панель управления</title>
+<style>
+:root{color-scheme:dark;--bg:#10131c;--surface:#1a1e2b;--border:#32394d;--text:#eef1f8;--muted:#a4aec3;--accent:#8bafff;--good:#83d6ad}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:980px;margin:34px auto;padding:0 20px 48px}header{margin-bottom:26px}h1{font-size:clamp(26px,4.5vw,40px);margin:0 0 8px;letter-spacing:-.7px}h2{font-size:21px;margin:0 0 14px}p{margin:8px 0 13px}
+.muted{color:var(--muted)}.tag{color:var(--good);font-weight:600}.layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:17px;padding:23px;margin-bottom:18px;min-width:0}
+.wide{grid-column:1/-1}label{display:block;font-weight:550;font-size:14px;margin:12px 0 6px}
+input,select,textarea{background:#101521;border:1px solid var(--border);border-radius:9px;color:var(--text);padding:12px;width:100%;font:inherit}
+textarea{min-height:100px;resize:vertical}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{cursor:pointer;background:var(--accent);color:#101621;border:0;border-radius:9px;padding:11px 15px;font-size:14px;font-weight:700}
+button:disabled{opacity:.5;cursor:wait}button.ghost{background:#31394e;color:var(--text)}button.danger{background:#49313e;color:#ffb6c7}
+small,.hint{font-size:13px;color:var(--muted)}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.voice{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);padding:12px 0}
+.voice:last-child{border-bottom:none}
+.checkline{display:flex;align-items:flex-start;gap:10px;font-weight:400}
+.checkline input{width:18px;min-width:18px;margin-top:4px}
+.status{padding:10px 12px;border-radius:9px;background:#12261e;color:var(--good);font-size:14px}
+.status.error{background:#38222b;color:#ffb9c7}
+code{background:#0f1420;border:1px solid var(--border);border-radius:6px;padding:2px 5px;overflow-wrap:anywhere}
+a{color:var(--accent)}audio{width:100%;margin-top:15px}
+@media(max-width:690px){.layout{grid-template-columns:1fr}.panel{padding:17px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Keyboop + OmniVoice</h1>
+<p class="muted">Раскладка клавиатуры и собственный голос для ИИ-агента · работает на твоём Mac</p>
+<div id="health" class="status" role="status">Проверяю состояние...</div>
+</header>
+<div class="layout">
+<section class="panel">
+<h2>1. Keyboop</h2>
+<p>Автоматически исправляет раскладку, работает как отдельное приложение в строке меню.</p>
+<a href="https://keyboop.com" target="_blank" rel="noopener noreferrer">Официальный сайт Keyboop</a>
+<p class="hint">Для переключения раскладки macOS попросит разрешение на доступ к клавиатуре. Выдай его в «Системных настройках».</p>
+</section>
+<section class="panel">
+<h2>2. Голоса OmniVoice</h2>
+<div id="voices" aria-live="polite">Загрузка...</div>
+<p class="hint">Образцы голоса сохраняются только на этом Mac. Для клонирования нужно согласие владельца голоса.</p>
+</section>
+<section class="panel">
+<h2>Создать голос по описанию</h2>
+<form id="design">
+<label for="design-name">Название (латиницей)</label>
+<input id="design-name" name="name" pattern="[a-z][a-z0-9_-]{0,39}" value="my_narrator" required maxlength="40">
+<label for="design-style">Как должен звучать голос</label>
+<select id="design-style" name="instruction">
+<option value="female, moderate pitch, russian accent">Женский, средний тембр, русский акцент</option>
+<option value="male, low pitch, russian accent">Мужской, низкий тембр, русский акцент</option>
+<option value="female, high pitch">Женский, высокий тембр</option>
+<option value="male, very low pitch">Мужской, очень низкий тембр</option>
+<option value="female, whisper">Женский шёпот</option>
+<option value="male, british accent">Мужской, британский акцент</option>
+<option value="female, american accent">Женский, американский акцент</option>
+<option value="elderly, male">Пожилой мужской</option>
+<option value="young adult, female">Молодой женский</option>
+</select>
+<p class="hint">OmniVoice поддерживает перечисленные атрибуты, но не свободные описания вроде «приятный, тёплый». Для точного голоса используй образец записи.</p>
+<label for="design-language">Язык текста</label>
+<select id="design-language" name="language"><option value="Russian">Русский</option><option value="English">English</option></select>
+<p><button type="submit">Добавить голос</button></p>
+</form>
+</section>
+<section class="panel">
+<h2>Клонировать голос по образцу</h2>
+<form id="clone" enctype="multipart/form-data">
+<label for="clone-name">Название (латиницей)</label>
+<input id="clone-name" name="name" placeholder="my_voice" pattern="[a-z][a-z0-9_-]{0,39}" required maxlength="40">
+<label for="clone-file">Запись голоса (PCM WAV, желательно 3–10 секунд)</label>
+<input type="file" id="clone-file" name="file" accept=".wav,audio/wav" required>
+<label for="clone-text">Точный текст, произнесённый на записи</label>
+<textarea id="clone-text" name="ref_text" required maxlength="2000" placeholder="Перепиши слова точно, как в аудио"></textarea>
+<label for="clone-language">Язык текста</label>
+<select id="clone-language" name="language"><option value="Russian">Русский</option><option value="English">English</option></select>
+<label class="checkline"><input type="checkbox" name="consent" value="true" required>Подтверждаю, что это мой голос или у меня есть разрешение владельца на его клонирование.</label>
+<p><button type="submit">Добавить запись голоса</button></p>
+</form>
+</section>
+<section class="panel wide">
+<h2>3. Проверить озвучку</h2>
+<form id="speak">
+<label for="speak-voice">Выбранный голос</label>
+<select id="speak-voice" required></select>
+<label for="speak-text">Текст агента</label>
+<textarea id="speak-text" maxlength="3000" required>Привет! Теперь твой ИИ-агент может разговаривать моим голосом.</textarea>
+<p class="row"><button id="speak-button" type="submit">Озвучить</button><span class="hint">Первый запуск загружает модель в память; это может занять время.</span></p>
+</form>
+<audio id="player" controls hidden></audio>
+</section>
+<section class="panel wide">
+<h2>4. Подключить к агенту</h2>
+<p>В настройках голосового клиента укажи локальный TTS endpoint: <code>http://127.0.0.1:3912/v1/audio/speech</code>.</p>
+<p class="hint">Метод POST, JSON: <code>{"input":"Привет!","voice":"narrator","response_format":"wav"}</code>. Ответ — WAV. Некоторые агенты требуют небольшой адаптер для этого API.</p>
+<p class="hint">Модельные веса — CC BY-NC (некоммерческое использование). Код OmniVoice — Apache 2.0, Keyboop — MIT. Этот комплект не связан с авторами исходных программ.</p>
+</section>
+</div>
+<div id="message" role="status" aria-live="polite"></div>
+</main>
+<script>
+"use strict";
+const el = id => document.getElementById(id);
+let currentVoices = [];
+function showMessage(message, error=false) {
+  const target = el("message");
+  target.textContent = message;
+  target.className = error ? "status error" : "status";
+  target.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+async function jsonResponse(response) {
+  if (!response.ok) {
+    let msg = "Ошибка HTTP "+response.status;
+    try { const data=await response.json(); msg = String(data.detail || msg); }
+    catch (_) { msg=await response.text().catch(()=>msg); }
+    throw new Error(msg);
+  }
+  return response.json();
+}
+async function refresh() {
+  try {
+    const [health, voices] = await Promise.all([
+      fetch("/health").then(jsonResponse),
+      fetch("/api/voices").then(jsonResponse)
+    ]);
+    const status = el("health");
+    status.textContent = (health.model_downloaded ? "Модель установлена" : "Модель не загружена — запусти установщик") +
+      " · Сервер работает · Голосов: " + voices.voices.length +
+      (health.model_loaded ? " · Готов к озвучке" : " · Модель загрузится при первом запросе");
+    status.className = "status" + (health.model_downloaded ? "" : " error");
+    currentVoices = voices.voices;
+    const list=el("voices"); list.replaceChildren();
+    const select=el("speak-voice"), saved=select.value;
+    select.replaceChildren();
+    if (!voices.voices.length) { list.textContent="Пока нет голосов. Создай голос ниже."; }
+    for (const voice of voices.voices) {
+      const option=document.createElement("option"); option.value=voice.name;
+      option.textContent=voice.name+" · "+voice.mode;
+      select.append(option);
+      const row=document.createElement("div"); row.className="voice";
+      const info=document.createElement("span"); info.textContent=voice.name+" · "+(voice.mode==="clone"?"По образцу":"По описанию");
+      const remove=document.createElement("button"); remove.className="danger";
+      remove.type="button"; remove.textContent="Удалить";
+      remove.addEventListener("click",async()=>{
+        if (!confirm("Удалить голос «"+voice.name+"» и его локальный образец?")) return;
+        try {
+          await jsonResponse(await fetch("/api/voices/"+encodeURIComponent(voice.name),{method:"DELETE"}));
+          showMessage("Голос удалён"); await refresh();
+        } catch (e) { showMessage(e.message,true); }
+      });
+      row.append(info,remove); list.append(row);
+    }
+    if ([...select.options].some(x=>x.value===saved)) select.value=saved;
+  } catch (e) { el("health").textContent="Нет связи с локальным сервером: "+e.message; el("health").className="status error"; }
+}
+el("design").addEventListener("submit",async event=>{
+  event.preventDefault(); const form=event.currentTarget, data=Object.fromEntries(new FormData(form));
+  const button=form.querySelector("button"); button.disabled=true;
+  try {
+    await jsonResponse(await fetch("/api/voices/design",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)}));
+    showMessage("Голос по описанию добавлен"); await refresh();
+  } catch(e) { showMessage(e.message,true); } finally { button.disabled=false; }
+});
+el("clone").addEventListener("submit",async event=>{
+  event.preventDefault(); const form=event.currentTarget;
+  const button=form.querySelector("button");button.disabled=true;
+  try {
+    await jsonResponse(await fetch("/api/voices/clone",{method:"POST",body:new FormData(form)}));
+    showMessage("Голос по образцу добавлен. Запись хранится только на твоём Mac.");
+    form.reset(); await refresh();
+  } catch (e) { showMessage(e.message,true); } finally { button.disabled=false; }
+});
+el("speak").addEventListener("submit",async event=>{
+  event.preventDefault(); const button=el("speak-button");button.disabled=true;button.textContent="Генерация...";
+  const player=el("player");
+  try {
+    const response=await fetch("/v1/audio/speech",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({voice:el("speak-voice").value,input:el("speak-text").value,response_format:"wav"})
+    });
+    if (!response.ok) {
+      await jsonResponse(response);
+      return;
+    }
+    const blob=await response.blob();
+    const old=player.dataset.url;
+    player.src=URL.createObjectURL(blob); player.dataset.url=player.src;player.hidden=false;
+    if (old) URL.revokeObjectURL(old);
+    player.play().catch(()=>{});
+    showMessage("Готово. Звук можно прослушать ниже.");
+  } catch(e) { showMessage(e.message,true); }
+  finally {button.disabled=false;button.textContent="Озвучить";}
+});
+refresh();
+</script>
+</body>
+</html>

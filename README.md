@@ -1,39 +1,81 @@
-# Keyboop + OmniVoice Kit
+# Keyboop + OmniVoice
 
-**A local keyboard-layout and AI voice setup for macOS.** [Русская инструкция](README.ru.md)
+**Переключение раскладки и собственный голос для ИИ-агента на Mac.** Один установочный комплект, два независимых движка: оригинальный [Keyboop](https://keyboop.com) для клавиатуры и [OmniVoice](https://github.com/k2-fsa/OmniVoice) для синтеза речи.
 
-Two separate upstream projects: [Keyboop](https://keyboop.com) switches/fixes keyboard layouts; [OmniVoice](https://github.com/k2-fsa/OmniVoice) synthesizes an AI agent's speech. This repository provides an independent, localhost-only voice API and setup guide. It **does not** redistribute either upstream project, pretrained weights or people's voice recordings.
+[English documentation](README.en.md) · [Вопросы и ошибки](https://github.com/NickPicnick13/keyboop-omnivoice/issues)
 
-## Quick start (Apple Silicon, macOS)
+## Как установить
 
-1. Install official [Keyboop](https://keyboop.com), grant macOS Accessibility/Input Monitoring permissions as prompted, and configure your language layouts in Keyboop settings.
-2. Have **Python 3.11** and **3 GB+** free disk space for OmniVoice weights (plus Python dependencies). On an Apple Silicon Mac with PyTorch MPS:
-   ```sh
-   git clone https://github.com/NickPicnick13/keyboop-omnivoice.git
-   cd keyboop-omnivoice
-   bash scripts/install.sh
-   ```
-3. Download the OmniVoice pretrained weights yourself following [upstream instructions](https://github.com/k2-fsa/OmniVoice); set `KOV_MODEL_DIR` to the directory containing `model.safetensors`.
-4. Register an **authorized** reference sample, with an *exact transcript* of what was spoken:
-   ```sh
-   source .venv/bin/activate
-   keyboop-omnivoice add-voice narrator --file /path/to/consented-sample.wav --text "Exact words in the sample"
-   keyboop-omnivoice serve
-   ```
-   Alternatively: `keyboop-omnivoice add-design narrator --instruction "A warm, clear Russian narrator"`.
-5. In another terminal, try:
-   ```sh
-   curl -sS http://127.0.0.1:3912/health
-   curl -sS http://127.0.0.1:3912/v1/audio/speech -H 'Content-Type: application/json' -d '{"voice":"narrator","input":"Привет! Это мой агент."}' --output speech.wav
-   ```
-   Play `speech.wav` locally. Point your agent's OpenAI-compatible TTS client at `http://127.0.0.1:3912/v1/audio/speech`. The API uses `voice` and `input`, returns WAV. Existing services are not modified.
+1. Скачай ZIP из раздела **[Releases](https://github.com/NickPicnick13/keyboop-omnivoice/releases)**, распакуй архив.
+2. На Mac с Apple Silicon дважды нажми **Install.command**. Если macOS запрещает запуск загруженного скрипта, используй контекстное меню → «Открыть» и проверь издателя/содержимое перед подтверждением.
+3. Прими условия лицензии весов OmniVoice **CC BY-NC (только некоммерческое использование)**. Установщик скачает актуальный подписанный Keyboop из официального GitHub, Python-зависимости и модель с Hugging Face.
+4. Откроется локальная панель **http://127.0.0.1:3912/**. Выбери голос, напиши текст и нажми «Озвучить». Для клонирования своего голоса загрузи короткий WAV-файл и точный текст записи.
 
-### Commands
+**Готово:** Keyboop работает в строке меню macOS, а голосовой сервер автоматически запускается при входе в учётную запись. Данные остаются на устройстве; интернет нужен только при установке и обновлениях.
 
-`keyboop-omnivoice doctor` checks runtime prerequisites; `list-voices` lists your local profiles; `add-voice` registers a consented WAV sample; `add-design` creates an instruction-based voice; `remove-voice` deletes a profile; `serve` starts the localhost-only API. Run `keyboop-omnivoice --help` for options. Data are held in `~/.local/share/keyboop-omnivoice` and `~/.config/keyboop-omnivoice`, never in Git.
+> **Системные разрешения:** macOS сама попросит доступ к клавиатуре/«Универсальный доступ» для Keyboop. Установщик не может и не должен обходить эти разрешения.
 
-### Caveats
+### Что делает установщик
 
-This is an **alpha integration**, not a signed macOS app or Keyboop replacement. It is tested at the API/unit level; end-to-end installation on a fresh Mac has not yet been certified. The model starts cold and can take time to load. The server has **no authentication**; do not expose port 3912 on your network. Only use voices with their owners' consent. **The published model weights have a noncommercial license**; see [THIRD_PARTY.md](THIRD_PARTY.md). [Security](SECURITY.md), [Contributing](CONTRIBUTING.md).
+- Проверяет Mac Apple Silicon (M1+) с macOS 14+.
+- Копирует комплект в `~/Library/Application Support/KeyboopOmniVoice/app`.
+- Подготавливает Python 3.11 через `uv`, устанавливает OmniVoice 0.5.2 и PyTorch 2.8.0.
+- Скачивает **официальный релиз Keyboop** с проверкой SHA256 GitHub (если предоставлен) и подписи Apple. Не подменяет или не переписывает приложение Keyboop.
+- С согласия пользователя скачивает веса `k2-fsa/OmniVoice` (около **3,3 ГБ**) в закрытый каталог пользователя.
+- Создаёт пример голоса `narrator`, включает локальный API на `127.0.0.1:3912` и открывает веб-интерфейс.
 
-Keyboop and OmniVoice are separate products and this kit is not affiliated with their developers.
+**Нужно:** свободное место для весов и зависимостей (рекомендуется не менее 8 ГБ), Apple Silicon, macOS 14+, подключение к интернету для первого запуска. Рекомендуется 16 ГБ объединённой памяти или больше. Intel Mac поддерживает оригинальный Keyboop, но данный установщик OmniVoice требует ускорение Apple MPS.
+
+## Голоса
+
+В панели предусмотрены **два варианта**:
+
+- **Создать по описанию:** выбери комбинацию поддерживаемых характеристик (пол, высота голоса, акцент). OmniVoice **не принимает произвольный текст описания**; качество голосового дизайна зависит от языка.
+- **Клонировать по образцу:** загрузи 3–10-секундный PCM WAV и расшифровку произнесённых слов. Используй **только свой голос или голос человека с явным разрешением**. Образцы не публикуются.
+
+Можно хранить несколько голосов, выбирать их для реплик агента и удалять без изменения модели. Для генерации используется один локальный экземпляр модели и ограниченный кэш готовой речи в оперативной памяти.
+
+## Подключение к агенту
+
+Локальный HTTP API принимает запросы в формате OpenAI TTS, возвращает **WAV** (это совместимый маршрут, а не полная реализация OpenAI API):
+
+- Адрес: `http://127.0.0.1:3912/v1/audio/speech`
+- Метод: `POST`
+- Тело JSON: `{"input":"Привет!","voice":"narrator","response_format":"wav"}`
+
+Пример:
+
+```bash
+curl -sS http://127.0.0.1:3912/v1/audio/speech \
+  -H 'Content-Type: application/json' \
+  -d '{"voice":"narrator","input":"Привет! Это мой агент."}' \
+  --output speech.wav
+```
+
+Если твой агент умеет подключаться к OpenAI-совместимым TTS-провайдерам, укажи этот endpoint. Для других агентов может понадобиться адаптер. **OmniVoice озвучивает ответы агента; он не заменяет распознавание речи или LLM.** Keyboop переключает раскладку независимо от голосового API.
+
+## Управление
+
+- `Open Dashboard.command` — открыть панель управления.
+- `Remove.command` — остановить службу и удалить установленный комплект (приватные голоса сохраняются).
+- `keyboop-omnivoice doctor` — диагностика, если команда запущена из установленного виртуального окружения.
+- `keyboop-omnivoice download-model --accept-noncommercial-license` — повторить загрузку весов при сбое соединения.
+
+Установщик можно запустить повторно для восстановления. Он **не удаляет существующие голоса**. Сервис не занимает чужие порты и не изменяет установленную систему другого агента.
+
+## Для разработчиков
+
+```bash
+git clone https://github.com/NickPicnick13/keyboop-omnivoice.git
+cd keyboop-omnivoice
+bash scripts/install.sh --dry-run
+python3.11 -m venv .venv
+.venv/bin/python -m pip install -e ".[test]"
+.venv/bin/python -m pytest -q
+```
+
+## Право использования и статус
+
+Код этого комплекта: MIT. [Keyboop](https://github.com/iffuno/keyboop) — самостоятельный MIT-проект Ивана Сметанина. Код OmniVoice — Apache 2.0, но **предобученные веса лицензированы CC BY-NC**, поэтому их нельзя считать свободными для коммерческого использования. Мы не переиздаём Keyboop, модельные веса или голосовые записи. [Лицензии](THIRD_PARTY.md) · [Безопасность](SECURITY.md).
+
+**Статус: beta.** Проверены установочные сценарии в безопасном режиме, API, модельная интеграция и тесты; **на чистом чужом Mac полная установка пока не сертифицирована**. Не выдаём данный комплект за подписанный или нотаризованный самостоятельный .app; подписан только оригинальный Keyboop от разработчика.

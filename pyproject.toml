@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "keyboop-omnivoice-kit"
-version = "0.1.0"
+version = "0.2.0b1"
 description = "Local OmniVoice TTS integration kit for Keyboop users and AI agents"
 requires-python = ">=3.11,<3.13"
 readme = "README.md"
 license = "MIT"
-dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "numpy>=1.26,<3"]
+dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "numpy>=1.26,<3", "python-multipart>=0.0.9,<1"]
 
 [project.optional-dependencies]
-runtime = ["omnivoice==0.5.2", "torch==2.8.0", "torchaudio==2.8.0"]
+runtime = ["omnivoice==0.5.2", "torch==2.8.0", "torchaudio==2.8.0", "huggingface-hub>=0.34,<2"]
 test = ["pytest>=8,<10", "httpx>=0.27,<1"]
 
 [project.scripts]
@@ -23,3 +23,6 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+keyboop_omnivoice = ["static/*.html"]
